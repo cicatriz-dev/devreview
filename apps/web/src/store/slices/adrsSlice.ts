@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { Adr, AdrStatus } from "@/types";
 
 export const fetchAdrs = createAsyncThunk(
   "adrs/fetchAdrs",
   async (teamId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("adrs")
       .select("*")
       .eq("team_id", teamId)
@@ -17,12 +17,14 @@ export const fetchAdrs = createAsyncThunk(
 
 interface AdrsState {
   items: Adr[];
+  fetchError: string | null;
   loading: boolean;
   statusFilter: AdrStatus | "all";
 }
 
 const initialState: AdrsState = {
   items: [],
+  fetchError: null,
   loading: false,
   statusFilter: "all",
 };
@@ -39,13 +41,17 @@ const adrsSlice = createSlice({
     builder
       .addCase(fetchAdrs.pending, (state) => {
         state.loading = true;
+        state.fetchError = null;
       })
       .addCase(fetchAdrs.fulfilled, (state, action) => {
         state.items = action.payload;
         state.loading = false;
+        state.fetchError = null;
       })
-      .addCase(fetchAdrs.rejected, (state) => {
+      .addCase(fetchAdrs.rejected, (state, action) => {
         state.loading = false;
+        state.fetchError =
+          action.error.message ?? "Não foi possível carregar as ADRs.";
       });
   },
 });

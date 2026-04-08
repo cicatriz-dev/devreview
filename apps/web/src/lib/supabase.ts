@@ -1,15 +1,22 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY são obrigatórios. " +
-      "Copie .env.example para .env e preencha com os valores do Supabase local."
-  );
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+let client: SupabaseClient | null = null;
+
+/**
+ * Cliente Supabase lazy: evita derrubar o bundle inteiro quando o `.env` não existe.
+ */
+export function getSupabase(): SupabaseClient {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY são obrigatórios. " +
+        "Copie apps/web/.env.example para apps/web/.env e preencha com o Supabase local."
+    );
+  }
+  client ??= createClient(supabaseUrl, supabaseAnonKey);
+  return client;
 }
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export const TEAM_ID = "11111111-1111-1111-1111-111111111111";

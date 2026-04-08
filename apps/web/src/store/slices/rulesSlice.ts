@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { ReviewRule, RuleCategory, RuleSeverity } from "@/types";
 
 export const fetchRules = createAsyncThunk(
   "rules/fetchRules",
   async (teamId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("review_rules")
       .select("*")
       .eq("team_id", teamId)
@@ -17,6 +17,7 @@ export const fetchRules = createAsyncThunk(
 
 interface RulesState {
   items: ReviewRule[];
+  fetchError: string | null;
   loading: boolean;
   categoryFilter: RuleCategory | "all";
   severityFilter: RuleSeverity | "all";
@@ -26,6 +27,7 @@ interface RulesState {
 
 const initialState: RulesState = {
   items: [],
+  fetchError: null,
   loading: false,
   categoryFilter: "all",
   severityFilter: "all",
@@ -56,13 +58,17 @@ const rulesSlice = createSlice({
     builder
       .addCase(fetchRules.pending, (state) => {
         state.loading = true;
+        state.fetchError = null;
       })
       .addCase(fetchRules.fulfilled, (state, action) => {
         state.items = action.payload;
         state.loading = false;
+        state.fetchError = null;
       })
-      .addCase(fetchRules.rejected, (state) => {
+      .addCase(fetchRules.rejected, (state, action) => {
         state.loading = false;
+        state.fetchError =
+          action.error.message ?? "Não foi possível carregar as regras.";
       });
   },
 });

@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchAdrs, setStatusFilter } from "@/store/slices/adrsSlice";
-import { TEAM_ID } from "@/lib/supabase";
+import { TEAM_ID } from "@/lib/team";
 import { AdrStatus } from "@/types";
 import { cn } from "@/lib/utils";
 

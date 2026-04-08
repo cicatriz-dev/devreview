@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { ReviewHistory } from "@/types";
 
 export const fetchHistory = createAsyncThunk(
   "history/fetchHistory",
   async (teamId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("review_history")
       .select("*")
       .eq("team_id", teamId)
@@ -17,12 +17,14 @@ export const fetchHistory = createAsyncThunk(
 
 interface HistoryState {
   items: ReviewHistory[];
+  fetchError: string | null;
   loading: boolean;
   repoFilter: string;
 }
 
 const initialState: HistoryState = {
   items: [],
+  fetchError: null,
   loading: false,
   repoFilter: "",
 };
@@ -39,13 +41,17 @@ const historySlice = createSlice({
     builder
       .addCase(fetchHistory.pending, (state) => {
         state.loading = true;
+        state.fetchError = null;
       })
       .addCase(fetchHistory.fulfilled, (state, action) => {
         state.items = action.payload;
         state.loading = false;
+        state.fetchError = null;
       })
-      .addCase(fetchHistory.rejected, (state) => {
+      .addCase(fetchHistory.rejected, (state, action) => {
         state.loading = false;
+        state.fetchError =
+          action.error.message ?? "Não foi possível carregar o histórico.";
       });
   },
 });

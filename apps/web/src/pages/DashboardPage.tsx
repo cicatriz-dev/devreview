@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchRules } from "@/store/slices/rulesSlice";
 import { fetchHistory } from "@/store/slices/historySlice";
 import { fetchAdrs } from "@/store/slices/adrsSlice";
-import { TEAM_ID } from "@/lib/supabase";
+import { TEAM_ID } from "@/lib/team";
 
 function issueSeverity(issues: number): "error" | "warning" | "info" {
   if (issues >= 4) return "error";

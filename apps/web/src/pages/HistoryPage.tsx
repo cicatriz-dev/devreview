@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchHistory, setRepoFilter } from "@/store/slices/historySlice";
-import { TEAM_ID } from "@/lib/supabase";
+import { TEAM_ID } from "@/lib/team";
 import { RuleSeverity } from "@/types";
 
 function issueSeverity(issues: number): RuleSeverity {

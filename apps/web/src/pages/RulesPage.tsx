@@ -36,7 +36,7 @@ import {
   openModal,
   closeModal,
 } from "@/store/slices/rulesSlice";
-import { TEAM_ID } from "@/lib/supabase";
+import { TEAM_ID } from "@/lib/team";
 import { RuleCategory, RuleSeverity } from "@/types";
 
 export function RulesPage() {
