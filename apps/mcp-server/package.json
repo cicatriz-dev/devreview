@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+    "inspector": "npx @modelcontextprotocol/inspector node build/index.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
