@@ -18,37 +18,63 @@ server.registerTool(
 			'Return rules grouped by category and severity.',
 		inputSchema: {
 			team_id: z.string().uuid().describe('UUID of the team (from the teams table)'),
-			type: z.string(),
+			category: z
+				.enum(['style', 'architecture', 'security', 'performance'])
+				.optional()
+				.describe('Filter by category. Omit to get all categories.'),
+			severity: z
+				.enum(['error', 'warning', 'info'])
+				.optional()
+				.describe(
+					'Filter by severity. "error" = must fix, "warning" = should fix, "info" = good to have. Omit to get all severities.',
+				),
+			limit: z
+				.number()
+				.int()
+				.min(1)
+				.max(50)
+				.default(20)
+				.describe('Max rules to returnes (1-50, default 20)'),
 		},
 	},
-	async ({ team_id }) => ({
-		content: [
+	async ({ team_id, category, severity, limit }) => {
+		const allRules = [
 			{
-				type: 'text',
-				text: JSON.stringify({
-					team_id,
-					rules: [
-						{
-							category: 'security',
-							rule: 'Nunca expor chaves de API em código-fonte',
-							severity: 'error',
-						},
-						{
-							category: 'style',
-							rule: 'Usar nomenclatura camelCase para variáveis',
-							severity: 'warning',
-						},
-						{
-							category: 'performance',
-							rule: 'Evitar renderizações desnecessárias',
-							severity: 'warning',
-						},
-					],
-					count: 3,
-				}),
+				category: 'security',
+				rule: 'Nunca expor chaves de API em código-fonte',
+				severity: 'error',
 			},
-		],
-	}),
+			{
+				category: 'style',
+				rule: 'Usar nomenclatura camelCase para variáveis',
+				severity: 'warning',
+			},
+			{ category: 'performance', rule: 'Evitar renderizações desnecessárias', severity: 'warning' },
+			{
+				category: 'architecture',
+				rule: 'Toda chamada de API deve passar por um service',
+				severity: 'error',
+			},
+		];
+
+		const filteredRules = allRules
+			.filter((rule) => !category || rule.category === category)
+			.filter((rule) => !severity || rule.severity === severity)
+			.slice(0, limit);
+
+		return {
+			content: [
+				{
+					type: 'text',
+					text: JSON.stringify({
+						team_id,
+						rules: filteredRules,
+						count: filteredRules.length,
+					}),
+				},
+			],
+		};
+	},
 );
 
 // Resource: schema do banco (dado estático)
