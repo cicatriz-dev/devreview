@@ -1,16 +1,21 @@
 {
-  "mcpServers": {
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=zmrrxdkbfyakvaqogyay&read_only=true&feature_groups=database"
-    },
-    "github": {
-      "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/",
-      "headers": {
-        "Authorization": "Bearer ${GITHUB_PAT}",
-        "X-MCP-Toolsets": "all"
-      }
-    }
-  }
+	"mcpServers": {
+		"supabase": {
+			"type": "http",
+			"url": "https://mcp.supabase.com/mcp?project_ref=zmrrxdkbfyakvaqogyay&read_only=true&feature_groups=database"
+		},
+		"github": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp/",
+			"headers": {
+				"Authorization": "Bearer ${GITHUB_PAT}",
+				"X-MCP-Toolsets": "all"
+			}
+		},
+		"devreview": {
+			"type": "stdio",
+			"command": "node",
+			"args": ["--env-file=apps/mcp-server/.env", "apps/mcp-server/build/index.js"]
+		}
+	}
 }
