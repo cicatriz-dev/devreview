@@ -1,9 +1,14 @@
 {
-  "name": "devreview",
-  "private": true,
-  "workspaces": ["apps/*"],
-  "scripts": {
-    "dev": "npm -w apps/web run dev",
-    "build": "npm -w apps/web run build"
-  }
+	"name": "devreview",
+	"private": true,
+	"workspaces": [
+		"apps/*"
+	],
+	"scripts": {
+		"dev": "npm -w apps/web run dev",
+		"build": "npm -w apps/web run build",
+		"mcp-server:build": "npm -w apps/mcp-server run build",
+		"mcp-server:dev": "npm -w apps/mcp-server run dev",
+		"mcp-server:inspector": "npm -w apps/mcp-server run inspector"
+	}
 }

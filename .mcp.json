@@ -6,7 +6,7 @@
 		},
 		"github": {
 			"type": "http",
-			"url": "https://api.githubcopilot.com/mcp/",
+			"url": "https://api.githubcopilot.com/mcp/x/repos/readonly/x/pull_requests",
 			"headers": {
 				"Authorization": "Bearer ${GITHUB_PAT}",
 				"X-MCP-Toolsets": "all"
