@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { registerReviewRulesTools } from './tools/review-rules.js';
 import { registerAdrTools } from './tools/adrs.js';
 import { registerMetricsTools } from './tools/metrics.js';
+import { registerSecureCodeReviewPrompt } from './prompts/secure-code-review.js';
 
 const server = new McpServer({
 	name: 'devreview-mcp',
@@ -12,6 +13,8 @@ const server = new McpServer({
 registerReviewRulesTools(server);
 registerAdrTools(server);
 registerMetricsTools(server);
+
+registerSecureCodeReviewPrompt(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
