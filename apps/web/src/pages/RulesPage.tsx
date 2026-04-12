@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { SeverityBadge } from "@/components/shared/SeverityBadge";
 import { CategoryBadge } from "@/components/shared/CategoryBadge";
@@ -28,9 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchRules,
+  createRule,
+  updateRule,
+  deleteRule,
   setCategoryFilter,
   setSeverityFilter,
   openModal,
@@ -47,6 +51,7 @@ export function RulesPage() {
   const [formRule, setFormRule] = useState("");
   const [formCategory, setFormCategory] = useState<RuleCategory>("style");
   const [formSeverity, setFormSeverity] = useState<RuleSeverity>("warning");
+  const [formActive, setFormActive] = useState(true);
 
   useEffect(() => {
     dispatch(fetchRules(TEAM_ID));
@@ -60,6 +65,7 @@ export function RulesPage() {
     setFormRule("");
     setFormCategory("style");
     setFormSeverity("warning");
+    setFormActive(true);
     dispatch(openModal(null));
   }
 
@@ -69,8 +75,38 @@ export function RulesPage() {
       setFormRule(rule.rule);
       setFormCategory(rule.category);
       setFormSeverity(rule.severity);
+      setFormActive(rule.active);
       dispatch(openModal(id));
     }
+  }
+
+  async function handleSave() {
+    if (!formRule.trim()) return;
+    if (editingRuleId) {
+      await dispatch(
+        updateRule({
+          id: editingRuleId,
+          rule: formRule.trim(),
+          category: formCategory,
+          severity: formSeverity,
+          active: formActive,
+        })
+      );
+    } else {
+      await dispatch(
+        createRule({
+          team_id: TEAM_ID,
+          rule: formRule.trim(),
+          category: formCategory,
+          severity: formSeverity,
+        })
+      );
+    }
+    dispatch(closeModal());
+  }
+
+  async function handleDelete(id: string) {
+    await dispatch(deleteRule(id));
   }
 
   const filtered = rules.filter((rule) => {
@@ -179,14 +215,24 @@ export function RulesPage() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-gray-500 hover:text-white"
-                      onClick={() => handleOpenEdit(rule.id)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-500 hover:text-white"
+                        onClick={() => handleOpenEdit(rule.id)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-500 hover:text-red-400"
+                        onClick={() => handleDelete(rule.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -264,6 +310,19 @@ export function RulesPage() {
                 </Select>
               </div>
             </div>
+
+            {editingRuleId && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="rule-active" className="text-gray-300">
+                  Regra ativa
+                </Label>
+                <Switch
+                  id="rule-active"
+                  checked={formActive}
+                  onCheckedChange={setFormActive}
+                />
+              </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -276,7 +335,7 @@ export function RulesPage() {
             </Button>
             <Button
               className="bg-indigo-600 hover:bg-indigo-500"
-              onClick={() => dispatch(closeModal())}
+              onClick={handleSave}
             >
               Salvar
             </Button>

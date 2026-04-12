@@ -15,6 +15,57 @@ export const fetchRules = createAsyncThunk(
   }
 );
 
+export const createRule = createAsyncThunk(
+  "rules/createRule",
+  async (payload: {
+    team_id: string;
+    rule: string;
+    category: RuleCategory;
+    severity: RuleSeverity;
+  }) => {
+    const { data, error } = await getSupabase()
+      .from("review_rules")
+      .insert(payload)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as ReviewRule;
+  }
+);
+
+export const updateRule = createAsyncThunk(
+  "rules/updateRule",
+  async (payload: {
+    id: string;
+    rule: string;
+    category: RuleCategory;
+    severity: RuleSeverity;
+    active: boolean;
+  }) => {
+    const { id, ...fields } = payload;
+    const { data, error } = await getSupabase()
+      .from("review_rules")
+      .update(fields)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as ReviewRule;
+  }
+);
+
+export const deleteRule = createAsyncThunk(
+  "rules/deleteRule",
+  async (id: string) => {
+    const { error } = await getSupabase()
+      .from("review_rules")
+      .delete()
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return id;
+  }
+);
+
 interface RulesState {
   items: ReviewRule[];
   fetchError: string | null;
@@ -69,6 +120,16 @@ const rulesSlice = createSlice({
         state.loading = false;
         state.fetchError =
           action.error.message ?? "Não foi possível carregar as regras.";
+      })
+      .addCase(createRule.fulfilled, (state, action) => {
+        state.items.unshift(action.payload);
+      })
+      .addCase(updateRule.fulfilled, (state, action) => {
+        const idx = state.items.findIndex((r) => r.id === action.payload.id);
+        if (idx !== -1) state.items[idx] = action.payload;
+      })
+      .addCase(deleteRule.fulfilled, (state, action) => {
+        state.items = state.items.filter((r) => r.id !== action.payload);
       });
   },
 });
