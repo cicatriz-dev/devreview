@@ -1,9 +1,34 @@
-import { useEffect } from "react";
-import { FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FileText, Plus, Pencil, Trash2 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchAdrs, setStatusFilter } from "@/store/slices/adrsSlice";
+import {
+  fetchAdrs,
+  createAdr,
+  updateAdr,
+  deleteAdr,
+  setStatusFilter,
+  openModal,
+  closeModal,
+} from "@/store/slices/adrsSlice";
 import { TEAM_ID } from "@/lib/team";
 import { AdrStatus } from "@/types";
 import { cn } from "@/lib/utils";
@@ -46,11 +71,74 @@ const tabItems: { value: AdrStatus | "all"; label: string }[] = [
 
 export function AdrsPage() {
   const dispatch = useAppDispatch();
-  const { items: adrs, statusFilter } = useAppSelector((s) => s.adrs);
+  const {
+    items: adrs,
+    statusFilter,
+    isModalOpen,
+    editingAdrId,
+  } = useAppSelector((s) => s.adrs);
+
+  const [formTitle, setFormTitle] = useState("");
+  const [formContext, setFormContext] = useState("");
+  const [formDecision, setFormDecision] = useState("");
+  const [formStatus, setFormStatus] = useState<AdrStatus>("proposed");
 
   useEffect(() => {
     dispatch(fetchAdrs(TEAM_ID));
   }, [dispatch]);
+
+  const editingAdr = editingAdrId
+    ? adrs.find((a) => a.id === editingAdrId)
+    : null;
+
+  function handleOpenNew() {
+    setFormTitle("");
+    setFormContext("");
+    setFormDecision("");
+    setFormStatus("proposed");
+    dispatch(openModal(null));
+  }
+
+  function handleOpenEdit(id: string) {
+    const adr = adrs.find((a) => a.id === id);
+    if (adr) {
+      setFormTitle(adr.title);
+      setFormContext(adr.context);
+      setFormDecision(adr.decision);
+      setFormStatus(adr.status);
+      dispatch(openModal(id));
+    }
+  }
+
+  async function handleSave() {
+    if (!formTitle.trim() || !formContext.trim() || !formDecision.trim()) return;
+    if (editingAdrId) {
+      await dispatch(
+        updateAdr({
+          id: editingAdrId,
+          title: formTitle.trim(),
+          context: formContext.trim(),
+          decision: formDecision.trim(),
+          status: formStatus,
+        })
+      );
+    } else {
+      await dispatch(
+        createAdr({
+          team_id: TEAM_ID,
+          title: formTitle.trim(),
+          context: formContext.trim(),
+          decision: formDecision.trim(),
+          status: formStatus,
+        })
+      );
+    }
+    dispatch(closeModal());
+  }
+
+  async function handleDelete(id: string) {
+    await dispatch(deleteAdr(id));
+  }
 
   const filtered =
     statusFilter === "all"
@@ -62,7 +150,19 @@ export function AdrsPage() {
 
   return (
     <div className="flex flex-col overflow-y-auto">
-      <Header title="ADRs — Decisões de Arquitetura" />
+      <Header
+        title="ADRs — Decisões de Arquitetura"
+        action={
+          <Button
+            size="sm"
+            className="gap-2 bg-indigo-600 hover:bg-indigo-500"
+            onClick={handleOpenNew}
+          >
+            <Plus className="h-4 w-4" />
+            Nova ADR
+          </Button>
+        }
+      />
 
       <div className="flex-1 space-y-5 p-6">
         {/* Tabs filter */}
@@ -138,9 +238,29 @@ export function AdrsPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="mt-4 flex items-center gap-1.5 text-gray-600">
-                  <FileText className="h-3 w-3" />
-                  <span className="text-xs">ADR-{adr.id.slice(0, 3).toUpperCase()}</span>
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-gray-600">
+                    <FileText className="h-3 w-3" />
+                    <span className="text-xs">ADR-{adr.id.slice(0, 3).toUpperCase()}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-gray-500 hover:text-white"
+                      onClick={() => handleOpenEdit(adr.id)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-gray-500 hover:text-red-400"
+                      onClick={() => handleDelete(adr.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
@@ -153,6 +273,93 @@ export function AdrsPage() {
           )}
         </div>
       </div>
+
+      {/* Modal */}
+      <Dialog open={isModalOpen} onOpenChange={() => dispatch(closeModal())}>
+        <DialogContent className="border-gray-800 bg-gray-900 text-white sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {editingAdr ? "Editar ADR" : "Nova ADR"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="adr-title" className="text-gray-300">
+                Título
+              </Label>
+              <Input
+                id="adr-title"
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="Ex: Adoção de Redux Toolkit para gerenciamento de estado"
+                className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-600"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="adr-context" className="text-gray-300">
+                Contexto
+              </Label>
+              <textarea
+                id="adr-context"
+                value={formContext}
+                onChange={(e) => setFormContext(e.target.value)}
+                placeholder="Descreva o contexto e o problema que motivou esta decisão..."
+                rows={3}
+                className="flex w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="adr-decision" className="text-gray-300">
+                Decisão
+              </Label>
+              <textarea
+                id="adr-decision"
+                value={formDecision}
+                onChange={(e) => setFormDecision(e.target.value)}
+                placeholder="Descreva a decisão tomada e as justificativas..."
+                rows={3}
+                className="flex w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-gray-300">Status</Label>
+              <Select
+                value={formStatus}
+                onValueChange={(v) => setFormStatus(v as AdrStatus)}
+              >
+                <SelectTrigger className="border-gray-700 bg-gray-800 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="border-gray-700 bg-gray-900">
+                  <SelectItem value="proposed">Proposta</SelectItem>
+                  <SelectItem value="accepted">Aceita</SelectItem>
+                  <SelectItem value="deprecated">Depreciada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              className="text-gray-400 hover:text-white"
+              onClick={() => dispatch(closeModal())}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-500"
+              onClick={handleSave}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
