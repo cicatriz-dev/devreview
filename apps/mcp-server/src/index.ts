@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { registerReviewRulesTools } from './tools/review-rules.js';
 import { registerAdrTools } from './tools/adrs.js';
 import { registerMetricsTools } from './tools/metrics.js';
+import { registerReviewHistoryTools } from './tools/review-history.js';
 import { registerSecureCodeReviewPrompt } from './prompts/secure-code-review.js';
 
 const server = new McpServer({
@@ -13,6 +14,7 @@ const server = new McpServer({
 registerReviewRulesTools(server);
 registerAdrTools(server);
 registerMetricsTools(server);
+registerReviewHistoryTools(server);
 
 registerSecureCodeReviewPrompt(server);
 
