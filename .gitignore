@@ -7,3 +7,5 @@ build/
 docs/
 .supabase/
 *.tsbuildinfo
+supabase/.temp/
+supabase/password
