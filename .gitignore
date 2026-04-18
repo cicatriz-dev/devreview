@@ -9,3 +9,4 @@ docs/
 *.tsbuildinfo
 supabase/.temp/
 supabase/password
+.mcp.json
